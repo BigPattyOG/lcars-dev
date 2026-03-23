@@ -15,6 +15,7 @@ from lcars.cli.ui.render import (
     render_help_panel,
     render_logs_panel,
     render_message_panel,
+    render_motd_panel,
     render_status_panel,
     render_version_panel,
 )
@@ -65,6 +66,15 @@ def help() -> None:
     """Display the LCARS command directory."""
 
     _console().print(render_help_panel())
+
+
+@main.command()
+def motd() -> None:
+    """Display the LCARS message of the day."""
+
+    paths = LcarsPaths.discover()
+    snapshot = _monitoring_service(paths).collect_snapshot(sample_interval=0.0)
+    _console().print(render_motd_panel(snapshot))
 
 
 @main.command()

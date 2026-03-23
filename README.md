@@ -9,6 +9,7 @@ bot runtime controlled through the same service layer.
 
 - `lcars`
 - `lcars help`
+- `lcars motd`
 - `lcars status`
 - `lcars monitor`
 - `lcars restart`
@@ -28,10 +29,10 @@ bot runtime controlled through the same service layer.
 
 ## Deployment
 
-Uninstall a legacy LCARS install:
+Uninstall the current LCARS system:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BigPattyOG/lcars-dev/main/scripts/uninstall-legacy.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/BigPattyOG/lcars-dev/main/scripts/uninstall.sh | sudo bash
 ```
 
 Install the rebuilt LCARS system:

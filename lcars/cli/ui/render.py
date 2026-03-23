@@ -96,6 +96,13 @@ def render_dashboard(snapshot: SystemSnapshot) -> Group:
     return Group(top, middle, bottom)
 
 
+def render_motd_panel(snapshot: SystemSnapshot) -> Panel:
+    motd = Text(
+        build_motd(snapshot.release, snapshot.system_status), style=theme.VALUE_CYAN
+    )
+    return _panel(Align.left(motd), "LCARS MOTD")
+
+
 def render_help_panel() -> Columns:
     sections = []
     for section in HELP_SECTIONS:

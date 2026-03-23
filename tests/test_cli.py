@@ -27,3 +27,11 @@ def test_dashboard_renders_motd(runtime_env) -> None:
     assert result.exit_code == 0
     assert "LCARS COMPUTER INTERFACE" in result.output
     assert "Command Directory" in result.output
+
+
+def test_motd_command_renders_message(runtime_env) -> None:
+    result = CliRunner().invoke(main, ["motd"])
+
+    assert result.exit_code == 0
+    assert "LCARS COMPUTER INTERFACE" in result.output
+    assert "LCARS MOTD" in result.output

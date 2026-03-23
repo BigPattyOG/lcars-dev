@@ -8,6 +8,7 @@ HELP_SECTIONS: tuple[HelpSection, ...] = (
         commands=(
             ("lcars", "Render the LCARS operations dashboard."),
             ("lcars help", "Display the command directory."),
+            ("lcars motd", "Display the LCARS message of the day."),
             ("lcars version", "Display release metadata and stardate."),
             ("lcars install", "Initialize runtime configuration."),
         ),

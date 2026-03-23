@@ -60,10 +60,13 @@ class RuntimeConfig:
     environment: str
     env_path: Path
     discord_token: str | None = None
+    token_configured_flag: bool | None = None
     raw: Mapping[str, str] = field(default_factory=dict)
 
     @property
     def token_configured(self) -> bool:
+        if self.token_configured_flag is not None:
+            return self.token_configured_flag
         return bool(self.discord_token)
 
     def safe_pairs(self) -> list[tuple[str, str]]:
