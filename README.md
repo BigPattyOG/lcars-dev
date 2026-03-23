@@ -1,0 +1,37 @@
+# LCARS
+
+LCARS is a production-oriented command line and Discord control system built in
+Python with Click, Rich, and psutil. The project exposes a structured LCARS
+dashboard, a live monitoring console, an interactive installer, and a Discord
+bot runtime controlled through the same service layer.
+
+## Commands
+
+- `lcars`
+- `lcars help`
+- `lcars status`
+- `lcars monitor`
+- `lcars restart`
+- `lcars shutdown`
+- `lcars update`
+- `lcars version`
+- `lcars logs`
+- `lcars doctor`
+- `lcars install`
+
+## Runtime
+
+- Release metadata is stored statically in `lcars/version.json`.
+- The installer writes configuration to `/opt/lcars/.env` by default.
+- Runtime state and logs default to `/opt/lcars/state` and `/opt/lcars/logs`.
+
+## Development
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+black .
+ruff check .
+pytest
+```
