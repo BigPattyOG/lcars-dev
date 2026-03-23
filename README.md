@@ -24,6 +24,21 @@ bot runtime controlled through the same service layer.
 - Release metadata is stored statically in `lcars/version.json`.
 - The installer writes configuration to `/opt/lcars/.env` by default.
 - Runtime state and logs default to `/opt/lcars/state` and `/opt/lcars/logs`.
+- Production installs use `systemd` service `lcars.service`.
+
+## Deployment
+
+Uninstall a legacy LCARS install:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/BigPattyOG/lcars-dev/main/scripts/uninstall-legacy.sh | sudo bash
+```
+
+Install the rebuilt LCARS system:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/BigPattyOG/lcars-dev/main/scripts/install.sh | sudo bash
+```
 
 ## Development
 
