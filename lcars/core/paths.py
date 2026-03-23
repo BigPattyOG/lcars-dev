@@ -21,10 +21,22 @@ class LcarsPaths:
 
     @classmethod
     def discover(cls) -> LcarsPaths:
-        repo_root = Path(__file__).resolve().parents[2]
         install_root = Path(
             os.environ.get("LCARS_INSTALL_ROOT", "/opt/lcars")
         ).expanduser()
+        repo_root_env = os.environ.get("LCARS_REPO_ROOT")
+        if repo_root_env:
+            repo_root = Path(repo_root_env).expanduser()
+        else:
+            package_path = Path(__file__).resolve()
+            repo_root = next(
+                (
+                    parent
+                    for parent in package_path.parents
+                    if (parent / ".git").exists()
+                ),
+                install_root / "app",
+            )
         runtime_root = Path(
             os.environ.get("LCARS_RUNTIME_ROOT", str(install_root))
         ).expanduser()
@@ -54,3 +66,11 @@ class LcarsPaths:
         self.runtime_root.mkdir(parents=True, exist_ok=True)
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def service_name(self) -> str:
+        return os.environ.get("LCARS_SERVICE_NAME", "lcars.service")
+
+    @property
+    def systemd_marker_path(self) -> Path:
+        return self.install_root / "systemd-managed"

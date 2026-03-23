@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -23,6 +24,11 @@ class BotServiceManager:
         self.paths = paths or LcarsPaths.discover()
 
     def status(self) -> BotProcessState:
+        if self._uses_systemd():
+            return self._systemd_status()
+        return self._subprocess_status()
+
+    def _subprocess_status(self) -> BotProcessState:
         payload = read_json(self.paths.bot_state_path)
         if not payload:
             return BotProcessState(
@@ -70,6 +76,44 @@ class BotServiceManager:
             started_at=started_at,
         )
 
+    def _systemd_status(self) -> BotProcessState:
+        load_state = self._systemctl_value("LoadState", check=False) or "not-found"
+        if load_state == "not-found":
+            return BotProcessState(
+                name="Discord Bot",
+                running=False,
+                label="OFFLINE",
+                detail=f"systemd unit {self.paths.service_name} not installed.",
+            )
+
+        active_state = self._systemctl_value("ActiveState", check=False) or "inactive"
+        sub_state = self._systemctl_value("SubState", check=False) or "dead"
+        pid = int((self._systemctl_value("MainPID", check=False) or "0").strip() or 0)
+        started_at = self._started_at_from_state(pid)
+
+        if active_state == "active":
+            detail_parts = [f"systemd {active_state}/{sub_state}"]
+            if pid > 0:
+                detail_parts.append(f"PID {pid}")
+            if started_at is not None:
+                detail_parts.append(f"Since {format_timestamp(started_at)}")
+            return BotProcessState(
+                name="Discord Bot",
+                running=True,
+                label="ONLINE",
+                detail=" | ".join(detail_parts),
+                pid=pid if pid > 0 else None,
+                started_at=started_at,
+            )
+
+        self.clear_state()
+        return BotProcessState(
+            name="Discord Bot",
+            running=False,
+            label="OFFLINE",
+            detail=f"systemd {active_state}/{sub_state}",
+        )
+
     def record_current_process(self, pid: int | None = None) -> None:
         self.paths.ensure_runtime_dirs()
         active_pid = pid or os.getpid()
@@ -92,6 +136,16 @@ class BotServiceManager:
             handle.write(line)
 
     def start(self) -> BotProcessState:
+        if self._uses_systemd():
+            self.paths.ensure_runtime_dirs()
+            self._run_systemctl("start", self.paths.service_name)
+            time.sleep(0.6)
+            state = self.status()
+            if not state.running:
+                raise RuntimeError(f"Bot startup failed. {state.detail}")
+            self.write_event("Discord bot started via systemd.")
+            return state
+
         current = self.status()
         if current.running:
             return current
@@ -119,6 +173,13 @@ class BotServiceManager:
         return self.status()
 
     def stop(self, timeout: float = 10.0) -> BotProcessState:
+        if self._uses_systemd():
+            self._run_systemctl("stop", self.paths.service_name)
+            time.sleep(0.3)
+            state = self.status()
+            self.write_event("Discord bot stopped via systemd.")
+            return state
+
         current = self.status()
         if not current.running or current.pid is None:
             self.clear_state()
@@ -149,5 +210,76 @@ class BotServiceManager:
         )
 
     def restart(self) -> BotProcessState:
+        if self._uses_systemd():
+            self.paths.ensure_runtime_dirs()
+            self._run_systemctl("restart", self.paths.service_name)
+            time.sleep(0.6)
+            state = self.status()
+            if not state.running:
+                raise RuntimeError(f"Bot restart failed. {state.detail}")
+            self.write_event("Discord bot restarted via systemd.")
+            return state
+
         self.stop()
         return self.start()
+
+    def _uses_systemd(self) -> bool:
+        if shutil.which("systemctl") is None:
+            return False
+        return (
+            os.environ.get("LCARS_SYSTEMD_MANAGED") == "1"
+            or self.paths.systemd_marker_path.exists()
+        )
+
+    def _run_systemctl(self, action: str, service_name: str) -> str:
+        completed = subprocess.run(  # noqa: S603
+            ["systemctl", action, service_name],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        output = completed.stdout.strip() or completed.stderr.strip()
+        if completed.returncode != 0:
+            raise RuntimeError(output or f"systemctl {action} {service_name} failed.")
+        return output or "Command completed."
+
+    def _systemctl_value(self, property_name: str, *, check: bool) -> str:
+        completed = subprocess.run(  # noqa: S603
+            [
+                "systemctl",
+                "show",
+                f"--property={property_name}",
+                "--value",
+                self.paths.service_name,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        output = completed.stdout.strip() or completed.stderr.strip()
+        if check and completed.returncode != 0:
+            raise RuntimeError(
+                output
+                or (
+                    f"Unable to query {property_name} "
+                    f"for {self.paths.service_name}."
+                )
+            )
+        if completed.returncode != 0:
+            return ""
+        return completed.stdout.strip()
+
+    def _started_at_from_state(self, pid: int) -> datetime | None:
+        payload = read_json(self.paths.bot_state_path) or {}
+        started_at_raw = payload.get("started_at")
+        if started_at_raw:
+            return datetime.fromisoformat(started_at_raw)
+
+        if pid <= 0:
+            return None
+
+        try:
+            process = psutil.Process(pid)
+        except psutil.Error:
+            return None
+        return datetime.fromtimestamp(process.create_time(), tz=UTC)
