@@ -27,7 +27,7 @@ def _panel(renderable, title: str) -> Panel:
 
 
 def _metric_table(snapshot: SystemSnapshot) -> Table:
-    table = Table.grid(expand=True)
+    table = Table.grid(expand=True, padding=(0, 2))
     table.add_column(style=theme.HEADER_PURPLE)
     table.add_column(justify="right", style=theme.VALUE_CYAN)
     table.add_row("CPU", f"{snapshot.cpu_percent:.1f}%")
@@ -38,7 +38,7 @@ def _metric_table(snapshot: SystemSnapshot) -> Table:
 
 
 def _service_table(snapshot: SystemSnapshot) -> Table:
-    table = Table.grid(expand=True)
+    table = Table.grid(expand=True, padding=(0, 2))
     table.add_column(style=theme.HEADER_PURPLE)
     table.add_column(style=theme.VALUE_CYAN)
     for service in snapshot.services:
@@ -53,7 +53,7 @@ def _service_table(snapshot: SystemSnapshot) -> Table:
 
 
 def _commands_table() -> Table:
-    table = Table.grid(expand=True)
+    table = Table.grid(expand=True, padding=(0, 2))
     table.add_column(style=theme.HEADER_PURPLE)
     table.add_column(style=theme.TEXT_NEUTRAL)
     for command, description in dashboard_commands():
@@ -66,6 +66,7 @@ def render_dashboard(snapshot: SystemSnapshot) -> Group:
         build_motd(snapshot.release, snapshot.system_status), style=theme.VALUE_CYAN
     )
     release_table = Table.grid(expand=True)
+    release_table.padding = (0, 2)
     release_table.add_column(style=theme.HEADER_PURPLE)
     release_table.add_column(style=theme.VALUE_CYAN, justify="right")
     release_table.add_row("Version", snapshot.release.version)
@@ -98,7 +99,7 @@ def render_dashboard(snapshot: SystemSnapshot) -> Group:
 def render_help_panel() -> Columns:
     sections = []
     for section in HELP_SECTIONS:
-        table = Table.grid(expand=True)
+        table = Table.grid(expand=True, padding=(0, 2))
         table.add_column(style=theme.HEADER_PURPLE)
         table.add_column(style=theme.TEXT_NEUTRAL)
         for command, description in section.commands:
@@ -109,6 +110,7 @@ def render_help_panel() -> Columns:
 
 def render_status_panel(snapshot: SystemSnapshot, config: RuntimeConfig) -> Group:
     config_table = Table.grid(expand=True)
+    config_table.padding = (0, 2)
     config_table.add_column(style=theme.HEADER_PURPLE)
     config_table.add_column(style=theme.VALUE_CYAN)
     for key, value in config.safe_pairs():
@@ -120,7 +122,7 @@ def render_status_panel(snapshot: SystemSnapshot, config: RuntimeConfig) -> Grou
 
 
 def render_version_panel(release: ReleaseVersion) -> Panel:
-    table = Table.grid(expand=True)
+    table = Table.grid(expand=True, padding=(0, 2))
     table.add_column(style=theme.HEADER_PURPLE)
     table.add_column(style=theme.VALUE_CYAN)
     table.add_row("Version", release.version)

@@ -30,7 +30,7 @@ bot runtime controlled through the same service layer.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install ".[dev]"
 black .
 ruff check .
 pytest

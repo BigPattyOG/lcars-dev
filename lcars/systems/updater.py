@@ -24,7 +24,7 @@ class UpdateManager:
         return self._run_command(["git", "pull", "--ff-only"])
 
     def install_dependencies(self) -> str:
-        return self._run_command([sys.executable, "-m", "pip", "install", "-e", "."])
+        return self._run_command([sys.executable, "-m", "pip", "install", "."])
 
     def restart_service(self) -> None:
         self.service_manager.restart()
