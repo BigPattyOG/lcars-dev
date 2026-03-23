@@ -24,7 +24,10 @@ def parse_env(raw_text: str) -> dict[str, str]:
 def load_env_file(path: Path) -> dict[str, str]:
     if not path.exists():
         return {}
-    return parse_env(path.read_text(encoding="utf-8"))
+    try:
+        return parse_env(path.read_text(encoding="utf-8"))
+    except PermissionError:
+        return {}
 
 
 def build_install_payload(profile: InstallProfile) -> dict[str, str]:

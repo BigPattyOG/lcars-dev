@@ -180,7 +180,7 @@ export LCARS_LOG_DIR="${INSTALL_ROOT}/logs"
 export LCARS_REPO_ROOT="${APP_ROOT}"
 export LCARS_SYSTEMD_MANAGED=1
 export LCARS_SERVICE_NAME="${SERVICE_NAME}"
-exec "${VENV_ROOT}/bin/lcars" "\$@"
+exec "${VENV_ROOT}/bin/python" -m lcars.cli.main "\$@"
 EOF
     chmod 755 "${BIN_LINK}"
 }
@@ -193,7 +193,16 @@ activate_service() {
 
 fix_permissions() {
     mkdir -p "${INSTALL_ROOT}/state" "${INSTALL_ROOT}/logs"
-    chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_ROOT}"
+    chown root:root "${INSTALL_ROOT}"
+    chown -R root:root "${APP_ROOT}" "${VENV_ROOT}"
+    chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_ROOT}/state" "${INSTALL_ROOT}/logs"
+    chown root:"${SERVICE_USER}" "${ENV_PATH}" "${MARKER_PATH}"
+
+    chmod 755 "${INSTALL_ROOT}" "${APP_ROOT}" "${VENV_ROOT}" \
+        "${INSTALL_ROOT}/state" "${INSTALL_ROOT}/logs"
+    chmod -R a+rX "${APP_ROOT}" "${VENV_ROOT}"
+    chmod 640 "${ENV_PATH}"
+    chmod 644 "${MARKER_PATH}"
 }
 
 main() {
